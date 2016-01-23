@@ -1,0 +1,81 @@
+---
+title: "Process POLITY IV"
+author: "Logan Calder"
+date: "January 20, 2016"
+output: html_document
+---
+### Data Source
+Data was last downloaded on January 20th, 2016 with the link [http://www.systemicpeace.org/inscr/p4v2014.xls]
+It comes from the Center for Systemic Peace (CSP) with homepage [http://www.systemicpeace.org/].
+
+The link was found on CSP's page [http://www.systemicpeace.org/inscrdata.html]
+
+
+```{r packages, include = F}
+require(xlsx)
+require(xtable)
+require(plyr)
+```
+
+
+```{r directories, include = F}
+projectDir = getwd()
+roughDataDir = "/Users/loganscalder/Google Drive/International Relations/Country Time Series to Process/Polity IV"
+cleanDataDir = "/Users/loganscalder/Google Drive/International Relations/Country Time Series Processed/Polity IV"
+```
+
+```{r read_in, include = F}
+setwd(roughDataDir)
+dat = read.xlsx2(file = "Polity IV annual time series.xls", 
+                 sheetIndex = 1
+                 )
+setwd(projectDir)
+```
+
+```{r set_classes, include = F}
+dat = mutate(
+    dat,
+    year = as.numeric(as.character(year)),
+    polity2 = as.numeric(as.character(polity2)),
+    durable = as.numeric(as.character(durable))
+    )
+```
+
+### Head
+```{r head, echo = F}
+head(dat)
+```
+
+### Class
+Everything was read in as a factor. I changed the "year", "polity2", and "durable" variables to numeric.
+```{r, echo = F}
+sapply(dat, class)
+```
+
+### Summary
+```{r, echo = F}
+summary(dat)
+```
+
+### Processing Summary
+Data downloaded from the source was read into R using `read.xlsx2()`. Everything was read in as a factor, and then only the "year", "polity2", and "durable" variables were changed to be numeric. It may be helpful to have other variables changed to the numeric class, but for now, to emphasize the the fact that the values are really codes for something more meaningful, I've kept nearly everything a factor.
+
+### Write as .csv and .RData
+The data will now be saved as a .csv and R object.
+```{r, echo = F}
+setwd(cleanDataDir)
+fileName = "Polity IV annual time series"
+write.csv(dat, file = paste0(fileName,".csv"))
+
+variableName = "polity4"
+assign(variableName, dat)
+save(list = variableName, 
+     file = paste0(fileName,".RData")
+     )
+setwd(projectDir)
+
+t(t(c(directory = cleanDataDir,
+  `file name` = fileName,
+  `variable name` = variableName)))
+```
+

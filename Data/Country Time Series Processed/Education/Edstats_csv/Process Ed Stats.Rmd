@@ -1,0 +1,100 @@
+---
+title: "Process Ed Stats"
+author: "Logan Calder"
+date: "January 21, 2016"
+output: html_document
+---
+### Data Source
+Data was downloaded as a zip file from [http://databank.worldbank.org/data/download/Edstats_csv.zip, http://data.worldbank.org/data-catalog/ed-stats] on 20 January 2016. The download contained several .csv files describing the countries and variables measured. Looks to be well documented. Thank you world bank.
+
+The zip file was originall downloaded to "/Users/loganscalder/Google Drive/International Relations/Country Time Series to Process/Education/Edstats_csv"
+```{r packages, include = F}
+require(reshape)
+require(ggplot2)
+```
+
+```{r directories, include = F}
+projectDir = getwd()
+roughDataDir = "/Users/loganscalder/Google Drive/International Relations/Country Time Series to Process/Education/Edstats_csv"
+cleanDataDir = "/Users/loganscalder/Google Drive/International Relations/Country Time Series Processed/Education/Edstats_csv"
+```
+
+```{r read_in, echo = F, cache = T}
+setwd(roughDataDir)
+dat = read.csv("EdStats_Data.csv")
+setwd(projectDir)
+```
+
+# Data Description
+```{r}
+head(dat)
+```
+
+```{r indicators, echo = F, eval = F}
+length(table(dat$Indicator.Name))
+plot(unclass(table(dat$Indicator.Name)))
+names(table(dat$Indicator.Name))
+class(unclass(table(dat$Indicator.Name)))
+hist(dat$Indicator.Name)
+names(dat)
+table(dat$Country.Name)
+```
+There are 242 countries represented for each 3261 variables from the years 1970 to 2090 inclusive. There are many without values. I'd  like to know which variables have the most values for each country. 
+
+I think I can do this in a good way using reshape by having `na.rm = T` in `melt()`. My how an education determines our ideas.
+
+I get:
+```{r melt, cache = T}
+mdat = melt(dat, variable_name = "year", na.rm = T)
+
+head(mdat)
+```
+
+## data by variable
+Let's first just count how many times each variable is measured. There's a maximum of 242
+
+```{r, cache = T}
+t = table(mdat$Indicator.Name)
+
+head(t[order(t, decreasing = T)], 10)
+```
+
+```{r, cache = T}
+td <- as.data.frame(t)
+
+ggplot(td) + geom_histogram(aes(Freq))
+```
+
+```{r, cache = T}
+td_ = subset(td, Freq > quantile(td$Freq, probs = .9))
+
+ggplot(td_) + geom_histogram(aes(Freq))
+```
+
+What are the variables with over 9000 values?
+```{r cache = T}
+subset(td, Freq > 9000)
+```
+
+It's a lot of population...
+
+```{r cache = T}
+subset(td, Freq >7500 & Freq <=9000)
+```
+
+## data by year
+```{r year_counts, cache = T}
+tYear = table(mdat$year)
+```
+
+what years do I have the most data for?
+```{r graph_year_counts, cache = T}
+tdYear = as.data.frame(tYear)
+plot(tdYear)
+```
+Looks like there's a lot of data that was gathered, or at least attributed to, every fifth year. '70, '75, ...2000, 2005, 2010. We see spikes every fifth year. And some variables are forecasted into the future (population. That's why population could have such high counts.)
+
+```{r cache = T}
+subset(tdYear, Freq > quantile(Freq, probs = .75))
+```
+
